@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<conf>
+  <define>
+    <regex name="find_id" value="^.*?(\d+).*?$" target="1" mode="DOTALL"/>
+    <regex name="full_url" value=".*full_url=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="short_url" value=".*short_url=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="title" value=".*title=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+  </define>
+  <page>
+    <loop name="data" selector=".WB_cardwrap [mid]" valid="id, user_id, content, timestamp">
+      <field name="id" action="attr(mid)|int"/>
+      <wrap selector="a.W_texta">
+        <field name="nickname" action="attr(nick-name)"/>
+        <field name="user_href" action="attr(href)"/>
+        <field name="user_id" action="attr(usercard) | regex(find_id) | int"/>
+      </wrap>
+      <field name="content" selector="p.comment_txt" action="text"/>
+      <wrap selector=".feed_action_info">
+        <field name="retweet_count" child="1" action="text | regex(find_id) | default(0) | int "/>
+        <field name="comment_count" child="2" action="text | regex(find_id) | default(0) | int "/>
+        <field name="like_count" child="3" action="text | regex(find_id) | default(0) | int "/>
+      </wrap>
+      <wrap selector=".feed_from">
+        <wrap selector="a" order="0">
+          <field name="timestamp" action="attr(date) | int"/>
+          <field name="url" action="attr(href)"/>
+        </wrap>
+        <field name="source" selector="a" order="1" action="text"/>
+      </wrap>
+      <wrap selector=".media_box ul a">
+        <field name="video_full_url" action="attr(action-data) | regex(full_url)|unquote"/>
+        <field name="video_short_url" action="attr(action-data) | regex(short_url)"/>
+        <field name="video_title" action="attr(action-data) | regex(title) | unquote | decode(utf-8)"/>
+      </wrap>
+      <field name="video_brief" selector=".WB_feed_spec_brieftxt2" action="text | strip"/>
+    </loop>
+  </page>
+</conf>

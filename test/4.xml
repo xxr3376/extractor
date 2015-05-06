@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<conf>
+  <define>
+    <regex name="find_id" value="^.*?(\d+).*?$" target="1" mode="DOTALL"/>
+    <regex name="uid" value=".*uid=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="nick" value=".*nick=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="sex" value=".*sex=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="title_filter" value="视频:(.*)$" target="1" mode="DOTALL"/>
+  </define>
+  <page>
+    <wrap selector=".base .base_info">
+      <field name="title" selector="h1" action="text|regex(title_filter)" />
+      <loop name="category" selector=".crumbs a">
+        <field name="name" action="text" />
+        <field name="href" action="attr(href)" />
+      </loop>
+    </wrap>
+    <wrap selector=".yk-videoinfo">
+      <field name="description" selector=".text" action="text | strip" />
+      <field name="time" selector=".time" action="text | strip" />
+    </wrap>
+    <wrap selector=".yk-uploadinfo .yk-userinfo">
+      <wrap selector="a.userName">
+        <field name="username"  action="text | strip" />
+        <field name="user_href"  action="attr(href)" />
+      </wrap>
+      <field name="time" selector=".time" action="text | strip" />
+    </wrap>
+
+    <wrap selector="#videocomment">
+      <field name="comment_count" selector="#allnum_cmt" action="text|regex(find_id)|default(0)|int" />
+    </wrap>
+    <loop name="comments" selector="#Comments .comment">
+      <field name="id" action="attr(id)|regex(find_id)|int" />
+      <wrap selector=".bar a">
+        <field name="user_href" action="attr(href)"/>
+        <field name="user_name" action="text"/>
+      </wrap>
+      <field name="content" selector=".text p" action="text"/>
+      <wrap selector=".panel">
+        <field name="time" selector=".timestamp" action="text"/>
+        <field name="via" selector=".via em" action="text | strip"/>
+      </wrap>
+    </loop>
+
+    <field name="up_count" selector="#upVideoTimes" action="text | int"/>
+    <field name="down_count" selector="#downVideoTimes" action="text | int"/>
+    <field name="pv_count" selector="#videoTotalPV em" action="text | int"/>
+  </page>
+</conf>

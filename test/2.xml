@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<conf>
+  <define>
+    <regex name="find_id" value="^.*?(\d+).*?$" target="1" mode="DOTALL"/>
+    <regex name="real_tweet" value="^.*\n\s*(.*)$" mode="DOTALL" target="1"/>
+    <regex name="full_url" value=".*src=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="short_url" value=".*short_url=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="pid" value=".*pid=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="title" value=".*title=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+  </define>
+  <page>
+    <field name="exist" selector=".WB_feed_profile .WB_feed_profile" action="exist"/>
+    <field name="captcha" selector="[node-type=&quot;yzm_submit&quot;]" action="exist"/>
+    <field name="normal" selector=".WB_feed_profile.WB_feed" action="exist"/>
+    <loop name="data" selector=".WB_cardwrap.WB_feed_type" valid="id">
+      <field name="id" action="attr(mid)|int"/>
+      <field name="origin_id" action="attr(omid)|int"/>
+      <field name="minfo" action="attr(minfo)"/>
+      <field name="tbinfo" action="attr(tbinfo)"/>
+      <field name="forward-flag" action="attr(isforward)|default(1)"/>
+      <wrap selector=".WB_text">
+        <field name="nickname" action="attr(nick-name)"/>
+        <field name="content" action="text|regex(real_tweet)|strip"/>
+      </wrap>
+      <wrap selector=".WB_detail > .WB_from">
+        <wrap selector="a" order="0">
+          <field name="timestamp" action="attr(date) | int"/>
+          <field name="url" action="attr(href)"/>
+        </wrap>
+        <field name="source" selector="a" order="1" action="text"/>
+      </wrap>
+
+      <wrap selector=".WB_feed_handle .WB_handle ul">
+        <field name="retweet_count" child="1" action="text|regex(find_id)|default(0)|int "/>
+        <field name="comment_count" child="2" action="text|regex(find_id)|default(0)|int" />
+        <field name="like_count" child="3" action="text|regex(find_id)|default(0)|int" />
+      </wrap>
+
+      <wrap selector=".WB_text + .WB_media_wrap .media_box" order="-1">
+        <field name="rich-flag" value="1" />
+        <wrap selector=".spec_box">
+          <field name="video-flag" value="1" />
+          <wrap selector="a[action-type=&quot;feed_list_third_rend&quot;]">
+            <field name="video_full_url" action="attr(action-data) | regex(full_url)|unquote"/>
+            <field name="video_short_url" action="attr(action-data) | regex(short_url)"/>
+            <field name="video_title" action="attr(action-data) | regex(title) | unquote | decode(utf-8)"/>
+          </wrap>
+          <field name="video_brief" selector=".WB_feed_spec_brieftxt" action="text | strip"/>
+        </wrap>
+        <wrap selector="ul.WB_media_a">
+          <loop name="images" selector="li.WB_pic" valid="preview">
+            <field name="preview" selector="img" action="attr(src)" />
+          </loop>
+        </wrap>
+      </wrap>
+      <wrap selector=".WB_feed_expand" comment="转发原始微博">
+        <field name="origin_content" selector=".WB_text" action="text|regex(real_tweet)|strip"/>
+        <wrap selector=".WB_from">
+          <wrap selector="a" order="0">
+            <field name="origin_timestamp" action="attr(date) | int"/>
+            <field name="origin_url" action="attr(href)"/>
+          </wrap>
+          <field name="origin_reason" selector="a" order="1" action="text"/>
+        </wrap>
+        <wrap selector=".WB_info a">
+          <field name="origin_nickname" action="attr(title)" />
+          <field name="origin_user_id" action="attr(usercard)|regex(find_id)|int" />
+        </wrap>
+        <wrap selector=".WB_handle ul">
+          <field name="origin_retweet_count" child="0" action="text|regex(find_id)|default(0)|int "/>
+          <field name="origin_comment_count" child="1" action="text|regex(find_id)|default(0)|int" />
+          <field name="origin_like_count" child="2" action="text|regex(find_id)|default(0)|int" />
+        </wrap>
+      </wrap>
+    </loop>
+  </page>
+</conf>

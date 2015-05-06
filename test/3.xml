@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<conf>
+  <define>
+    <regex name="find_id" value="^.*?(\d+).*?$" target="1" mode="DOTALL"/>
+    <regex name="uid" value=".*uid=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="nick" value=".*nick=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+    <regex name="sex" value=".*sex=([^&amp;]+)(&amp;|$)" target="1" mode="DOTALL"/>
+  </define>
+  <page>
+    <field name="total" selector=".WB_tab_b" action="text | regex(find_id) | strip | int"/>
+    <wrap selector=".follow_box">
+      <loop name="data" selector=".follow_list .follow_item" valid="user_id">
+        <field name="user_id" action="attr(action-data) | regex(uid) | int"/>
+        <field name="nickname" action="attr(action-data) | regex(nick) | strip"/>
+        <field name="gender" action="attr(action-data) | regex(sex) | strip"/>
+        <wrap selector=".info_connect">
+          <field name="follow" child="0" action="text | regex(find_id) | default(0) | int "/>
+          <field name="fans" child="1" action="text | regex(find_id) | default(0) | int "/>
+          <field name="tweets_count" child="2" action="text | regex(find_id) | default(0) | int "/>
+        </wrap>
+      </loop>
+    </wrap>
+    <wrap selector=".W_pages">
+      <field name="current_page" selector=".page.S_txt1.S_bg1" action="text|int"/>
+      <field name="next_page_href" selector=".page.next" action="attr(href)"/>
+    </wrap>
+  </page>
+</conf>
